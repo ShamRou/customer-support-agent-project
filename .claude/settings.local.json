@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(pip cache:*)",
+      "Bash(python -c:*)",
+      "Bash(test:*)",
+      "Bash(PYTHONPATH=src python:*)",
+      "Bash(python scripts/ingest_documents.py:*)"
+    ]
+  }
+}

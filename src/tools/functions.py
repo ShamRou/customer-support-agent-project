@@ -59,25 +59,61 @@ TOOLS = [
 # Tool implementations (actual functions)
 def search_documentation(query: str) -> str:
     """
-    Simulate searching documentation.
-    In real implementation, this would do RAG/vector search.
-    For now, return mock data.
+    Search the DataPulse documentation using RAG (Retrieval-Augmented Generation).
+    Uses ChromaDB + OpenAI embeddings to find relevant documentation.
+    """
+    try:
+        # Import here to avoid circular dependencies
+        from rag.retriever import get_retriever
+
+        # Get retriever instance
+        retriever = get_retriever()
+
+        if not retriever.ready:
+            # Fallback to mock data if RAG not ready
+            return _search_documentation_fallback(query)
+
+        # Search knowledge base
+        print(f"   🔍 Searching knowledge base for: '{query}'")
+        context = retriever.search(query, n_results=3)
+
+        # Return the context
+        return context
+
+    except ImportError:
+        # If RAG dependencies not installed, use fallback
+        return _search_documentation_fallback(query)
+    except Exception as e:
+        print(f"   ⚠️  RAG search error: {e}")
+        return _search_documentation_fallback(query)
+
+
+def _search_documentation_fallback(query: str) -> str:
+    """
+    Fallback search when RAG is not available.
+    Returns mock data based on keywords.
     """
     # Mock responses based on common queries
     mock_docs = {
         "snowflake": "To connect to Snowflake: 1) Go to Integrations, 2) Select Snowflake, 3) Enter your account credentials...",
+        "bigquery": "To connect to BigQuery: 1) Create a service account in GCP, 2) Download JSON key, 3) Upload to DataPulse...",
+        "redshift": "To connect to Redshift: 1) Configure security group, 2) Create read-only user, 3) Enter connection details...",
         "alert": "Custom alerts are available on Pro and Enterprise plans. You can set up alerts based on data quality metrics...",
         "pricing": "We offer three plans: Free ($0), Pro ($99/month), and Enterprise (custom pricing)...",
-        "api": "Our API is available on Pro and Enterprise plans. Documentation: docs.datapulse.io/api..."
+        "api": "Our API is available on Pro and Enterprise plans. Documentation: docs.datapulse.io/api...",
+        "monitor": "DataPulse supports multiple monitor types: Freshness (data recency), Volume (row counts), Schema (structure changes), and Custom SQL...",
+        "slack": "Slack integration is available on Pro and Enterprise plans. Setup: Go to Settings > Integrations > Slack > Connect...",
+        "freshness": "Freshness monitors check when data was last updated. Configure by selecting a timestamp column and setting your threshold...",
+        "dbt": "dbt integration: Connect via dbt Cloud API or upload manifest.json. DataPulse auto-creates monitors from dbt tests...",
     }
-    
-    # Simple keyword matching for demo
+
+    # Simple keyword matching
     query_lower = query.lower()
     for keyword, response in mock_docs.items():
         if keyword in query_lower:
             return response
-    
-    return "I found general documentation about DataPulse. Could you be more specific about what you're looking for?"
+
+    return "I found general documentation about DataPulse. Could you be more specific about what you're looking for? Try asking about: Snowflake, BigQuery, alerts, pricing, monitors, or API."
 
 def check_plan_feature(feature: str, plan: str) -> str:
     """
